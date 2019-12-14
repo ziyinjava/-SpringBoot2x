@@ -6,14 +6,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
+import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.Topic;
+import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+
+import java.time.Duration;
 
 /**** imports ****/
 @Configuration
@@ -82,40 +88,27 @@ public class RedisConfig {
 		return container;
 	}
 
+	/**
+	 * 自定义配置较多的时候可以使用代码配置, 较少使用application配置,
+	 * 但是只能使用一种, 不能两种都使用
+	 * @return
+	 */
+	@Bean(name = "redisCacheManager" )
+	public RedisCacheManager initRedisCacheManager() {
+		// Redis加锁的写入器
+		RedisCacheWriter writer= RedisCacheWriter.lockingRedisCacheWriter(connectionFactory);
+		// 启动Redis缓存的默认设置
+		RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
+		// 设置JDK序列化器
+		config = config.serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new FastJsonRedisSerializer(Object.class)));
+		// 禁用前缀
+		config = config.disableKeyPrefix();
+		//设置10分钟超时
+		config = config.entryTtl(Duration.ofMinutes(10));
+		// 创建缓Redis存管理器
+		RedisCacheManager redisCacheManager = new RedisCacheManager(writer, config);
+		return redisCacheManager;
+	}
 
 
-
-//	@Bean(name = "redisConnectionFactory")
-////	public RedisConnectionFactory initConnectionFactory() {
-////		if (this.connectionFactory != null) {
-////			return this.connectionFactory;
-////		}
-////		JedisPoolConfig poolConfig = new JedisPoolConfig();
-////		// 最大空闲数
-////		poolConfig.setMaxIdle(50);
-////		// 最大连接数
-////		poolConfig.setMaxTotal(100);
-////		// 最大等待毫秒数
-////		poolConfig.setMaxWaitMillis(2000);
-////		// 创建Jedis连接工厂
-////		JedisConnectionFactory connectionFactory = new JedisConnectionFactory(poolConfig);
-////		// 配置Redis连接服务器
-////		RedisStandaloneConfiguration rsc = connectionFactory.getStandaloneConfiguration();
-////		rsc.setHostName("192.168.10.128");
-////		rsc.setPort(6379);
-////		rsc.setPassword(RedisPassword.of("123456"));
-////		this.connectionFactory = connectionFactory;
-////		return connectionFactory;
-////	}
-	
-//	@Bean(name="redisTemplate")
-//	public RedisTemplate<Object, Object> initRedisTemplate() {
-//	    RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
-//	    redisTemplate.setConnectionFactory(initConnectionFactory());
-//	    RedisSerializer<String> stringRedisSerializer = redisTemplate.getStringSerializer();
-//	    redisTemplate.setKeySerializer(stringRedisSerializer);
-//	    redisTemplate.setHashKeySerializer(stringRedisSerializer);
-//	    redisTemplate.setHashValueSerializer(stringRedisSerializer);
-//	  return redisTemplate;
-//	}
 }

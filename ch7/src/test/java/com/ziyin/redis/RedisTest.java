@@ -261,4 +261,38 @@ public class RedisTest {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("str", str);
 	}
+
+	@Test
+	public void testLua2() throws Exception{
+		Map<String, Object> resultMap = testLua2("k1", "k2", "1", "1");
+		System.out.println(resultMap);
+
+	}
+
+	public Map<String, Object> testLua2(String key1, String key2, String value1, String value2) {
+		// 定义Lua脚本
+		String lua = " redis.call('set', KEYS[1], ARGV[1]) \n"
+				+ " redis.call('set', KEYS[2], ARGV[2]) \n"
+				+ " local str1 = redis.call('get', KEYS[1]) \n"
+				+ " local str2 = redis.call('get', KEYS[2]) \n"
+				+ " if str1 == str2 then  \n" + "return 1 \n"
+				+ " end \n"
+				+ " return 0 \n";
+		System.out.println(lua);
+		// 结果返回为Long
+		DefaultRedisScript<Long> rs = new DefaultRedisScript<Long>();
+		rs.setScriptText(lua);
+		rs.setResultType(Long.class);
+		// 采用字符串序列化器
+		RedisSerializer<String> stringSerializer = redisTemplate.getStringSerializer();
+		// 定义key参数
+		List keyList = new ArrayList<>();
+		keyList.add(key1);
+		keyList.add(key2);
+		// 传递两个参数值，其中第一个序列化器是key的序列化器，第二个序列化器是参数的序列化器
+		Long result = (Long) redisTemplate.execute(rs, keyList, value1, value2);
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("result", result);
+		return map;
+	}
 }

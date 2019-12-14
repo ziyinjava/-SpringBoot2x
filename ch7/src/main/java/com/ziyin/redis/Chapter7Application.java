@@ -1,21 +1,14 @@
 package com.ziyin.redis;
 
-import com.alibaba.fastjson.parser.ParserConfig;
-import com.alibaba.fastjson.support.spring.FastJsonRedisSerializer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-
-import javax.annotation.PostConstruct;
+import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
+@EnableCaching
 public class Chapter7Application {
 
-	// RedisTemplate
+	/*// RedisTemplate
 	@Autowired
 	private RedisTemplate redisTemplate;
 
@@ -53,7 +46,7 @@ public class Chapter7Application {
 	public void init() {
 	    initRedisTemplate();
 	}
-	
+	*/
 	
 //	@Bean(name = "redisCacheManager" )
 //	public RedisCacheManager initRedisCacheManager() {
